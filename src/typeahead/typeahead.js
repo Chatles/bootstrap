@@ -51,6 +51,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
     //a callback executed when a match is selected
     var onSelectCallback = $parse(attrs.typeaheadOnSelect);
 
+    var createCompanyCallback = $parse(attrs.typeaheadOnCreateCompanyCallback); //dmdmdm
+
     //should it select highlighted popup value when losing focus?
     var isSelectOnBlur = angular.isDefined(attrs.typeaheadSelectOnBlur) ? originalScope.$eval(attrs.typeaheadSelectOnBlur) : false;
 
@@ -67,6 +69,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
     //If input matches an item of the list exactly, select it automatically
     var selectOnExact = attrs.typeaheadSelectOnExact ? originalScope.$eval(attrs.typeaheadSelectOnExact) : false;
+
+    var showCreate = originalScope.$eval(attrs.typeaheadShowCreate) || false; //dmdmdm
 
     //INTERNAL VARIABLES
 
@@ -117,7 +121,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
       select: 'select(activeIdx)',
       'move-in-progress': 'moveInProgress',
       query: 'query',
-      position: 'position'
+      position: 'position', //dmdmdm
+      'view-value': 'modelCtrl.$viewValue',//dmdmdm
+      'show-create': 'showCreate'//dmdmdm
     });
     //custom item template
     if (angular.isDefined(attrs.typeaheadTemplateUrl)) {
@@ -161,10 +167,27 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
       isLoadingSetter(originalScope, true);
       isNoResultsSetter(originalScope, false);
       $q.when(parserResult.source(originalScope, locals)).then(function(matches) {
+
+        scope.showCreate = showCreate;//dmdmdm
+
+        if(matches) {//dmdmdm
+          for(var j = 0; j < matches.length; j++) {//dmdmdm
+            var match = matches[j];//dmdmdm
+            if(match == null) {//dmdmdm
+              continue;//dmdmdm
+            }//dmdmdm
+            var name = match.name ? match.name : null;//dmdmdm
+            if (name === inputValue) {//dmdmdm
+              scope.haveFullMatchedCompany = true;//dmdmdm
+            }//dmdmdm
+          }//dmdmdm
+        }//dmdmdm
+
         //it might happen that several async queries were in progress if a user were typing fast
         //but we are interested only in responses that correspond to the current view value
         var onCurrentRequest = (inputValue === modelCtrl.$viewValue);
         if (onCurrentRequest && hasFocus) {
+          recalculatePosition();//dmdmdm
           if (matches && matches.length > 0) {
             scope.activeIdx = focusFirst ? 0 : -1;
             isNoResultsSetter(originalScope, false);
@@ -269,13 +292,52 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
     resetMatches();
 
     scope.select = function(activeIdx) {
+
+      scope.showCreate = false;//dmdmdm
+
       //called from within the $digest() cycle
       var locals = {};
       var model, item;
 
       selected = true;
-      locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
-      model = parserResult.modelMapper(originalScope, locals);
+
+      if(activeIdx === 'createCompany') {//dmdmdm//dmdmdm//dmdmdm//dmdmdm
+
+        createCompanyCallback(originalScope, {
+          $viewValue: modelCtrl.$viewValue
+        }).then(function(newCompany) {
+          //model = newCompany;
+
+          locals[parserResult.itemName] = item = newCompany;
+          model = parserResult.modelMapper(originalScope, locals);
+
+          //begin----
+          $setModelValue(originalScope, model);
+          modelCtrl.$setValidity('editable', true);
+          modelCtrl.$setValidity('parse', true);
+
+          onSelectCallback(originalScope, {
+            $item: item,
+            $model: model,
+            $label: parserResult.viewMapper(originalScope, locals)
+          });
+
+          resetMatches();
+
+          //return focus to the input element if a match was selected via a mouse click event
+          // use timeout to avoid $rootScope:inprog error
+          if (scope.$eval(attrs.typeaheadFocusOnSelect) !== false) {
+            $timeout(function() { element[0].focus(); }, 0, false);
+          }
+          //end----
+        }, function(){
+          modelCtrl.$setValidity('parse', false);
+        });
+      } else {
+        locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
+        model = parserResult.modelMapper(originalScope, locals);
+      }//dmdmdm//dmdmdm//dmdmdm//dmdmdm
+
       $setModelValue(originalScope, model);
       modelCtrl.$setValidity('editable', true);
       modelCtrl.$setValidity('parse', true);
@@ -297,6 +359,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
     //bind keyboard events: arrows up(38) / down(40), enter(13) and tab(9), esc(27)
     element.bind('keydown', function(evt) {
+
+      scope.showCreate = false;//dmdmdm
+
       //typeahead is open and an "interesting" key was pressed
       if (scope.matches.length === 0 || HOT_KEYS.indexOf(evt.which) === -1) {
         return;
@@ -342,6 +407,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
     // Keep reference to click handler to unbind it.
     var dismissClickHandler = function(evt) {
+
+      scope.showCreate = false;//dmdmdm
+
       // Issue #3973
       // Firefox treats right click as a click on document
       if (element[0] !== evt.target && evt.which !== 3 && scope.matches.length !== 0) {
@@ -381,6 +449,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
     this.init = function(_modelCtrl, _ngModelOptions) {
       modelCtrl = _modelCtrl;
       ngModelOptions = _ngModelOptions;
+      originalScope.modelCtrl = modelCtrl; //dmdmdm
 
       //plug into $parsers pipeline to open a typeahead on view changes initiated from DOM
       //$parsers kick-in on all the changes coming from the view as well as manually triggered by $setViewValue
@@ -460,7 +529,10 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         active: '=',
         position: '&',
         moveInProgress: '=',
-        select: '&'
+        select: '&',//dmdmdm//dmdmdm//dmdmdm//dmdmdm
+        viewValue: '=',
+        showCreate: '=',
+        haveFullMatchedCompany: '='//dmdmdm//dmdmdm//dmdmdm//dmdmdm
       },
       replace: true,
       templateUrl: function(element, attrs) {
@@ -470,7 +542,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         scope.templateUrl = attrs.templateUrl;
 
         scope.isOpen = function() {
-          return scope.matches.length > 0;
+          return (scope.matches.length > 0 || scope.showCreate);//dmdmdm
         };
 
         scope.isActive = function(matchIdx) {
@@ -533,7 +605,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
   }]);
 
 /* Deprecated typeahead below */
-  
+
 angular.module('ui.bootstrap.typeahead')
   .value('$typeaheadSuppressWarning', false)
   .service('typeaheadParser', ['$parse', 'uibTypeaheadParser', '$log', '$typeaheadSuppressWarning', function($parse, uibTypeaheadParser, $log, $typeaheadSuppressWarning) {
@@ -963,7 +1035,7 @@ angular.module('ui.bootstrap.typeahead')
       }
     };
   }])
-  
+
   .directive('typeaheadPopup', ['$typeaheadSuppressWarning', '$log', function($typeaheadSuppressWarning, $log) {
     return {
       scope: {
@@ -979,7 +1051,7 @@ angular.module('ui.bootstrap.typeahead')
         return attrs.popupTemplateUrl || 'template/typeahead/typeahead-popup.html';
       },
       link: function(scope, element, attrs) {
-        
+
         if (!$typeaheadSuppressWarning) {
           $log.warn('typeahead-popup is now deprecated. Use uib-typeahead-popup instead.');
         }
@@ -1003,7 +1075,7 @@ angular.module('ui.bootstrap.typeahead')
       }
     };
   }])
-  
+
   .directive('typeaheadMatch', ['$templateRequest', '$compile', '$parse', '$typeaheadSuppressWarning', '$log', function($templateRequest, $compile, $parse, $typeaheadSuppressWarning, $log) {
     return {
       restrict: 'EA',
@@ -1026,7 +1098,7 @@ angular.module('ui.bootstrap.typeahead')
       }
     };
   }])
-  
+
   .filter('typeaheadHighlight', ['$sce', '$injector', '$log', '$typeaheadSuppressWarning', function($sce, $injector, $log, $typeaheadSuppressWarning) {
     var isSanitizePresent;
     isSanitizePresent = $injector.has('$sanitize');

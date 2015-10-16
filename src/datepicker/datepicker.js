@@ -741,6 +741,19 @@ function(scope, element, attrs, $compile, $parse, $document, $rootScope, $positi
       scope.position.top = scope.position.top + element.prop('offsetHeight');
 
       $timeout(function() {
+
+        scope.$apply(function() {
+          var datepickerPopupWrap = element.next();
+          var datepickerPopupWrapOffset = $position.offset(datepickerPopupWrap);
+          var bodyWidth = angular.element('body').prop('offsetWidth');
+          if($position.offset(element).top + datepickerPopupWrap.prop('offsetHeight') > angular.element('body').innerHeight()) {
+            scope.position.top = scope.position.top - element.prop('offsetHeight') - datepickerPopupWrap.prop('offsetHeight');
+          }
+          if(datepickerPopupWrapOffset.left + datepickerPopupWrapOffset.width > bodyWidth) {
+            scope.position.left = scope.position.left - (datepickerPopupWrapOffset.left + datepickerPopupWrapOffset.width - bodyWidth);
+          }
+        });
+
         if (onOpenFocus) {
           scope.$broadcast('uib:datepicker.focus');
         }

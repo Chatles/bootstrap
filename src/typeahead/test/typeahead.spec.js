@@ -6,6 +6,8 @@ describe('typeahead tests', function() {
   beforeEach(module('ngSanitize'));
   beforeEach(module('template/typeahead/typeahead-popup.html'));
   beforeEach(module('template/typeahead/typeahead-match.html'));
+  beforeEach(module('template/typeahead/typeahead_popup_company.html'));
+
   beforeEach(module(function($compileProvider) {
     $compileProvider.directive('formatter', function() {
       return {
@@ -103,13 +105,36 @@ describe('typeahead tests', function() {
               pass: util.equals(typeaheadEl.length, 1, customEqualityTesters) &&
                     util.equals(typeaheadEl.hasClass('ng-hide'), false, customEqualityTesters) &&
                     util.equals(liEls.length, noOfMatches, customEqualityTesters) &&
-                    activeIdx === -1 ? !$(liEls).hasClass('active') : $(liEls[activeIdx]).hasClass('active')
+                    (activeIdx === -1 ? !$(liEls).hasClass('active') : $(liEls[activeIdx]).hasClass('active'))
             };
 
             if (result.pass) {
               result.message = 'Expected "' + actual + '" not to be opened.';
             } else {
               result.message = 'Expected "' + actual + '" to be opened.';
+            }
+
+            return result;
+          }
+        };
+      },
+      toBeOpenWithActiveAndCreate: function(util, customEqualityTesters) {
+        return {
+          compare: function(actual, noOfMatches, activeIdx) {
+            var typeaheadEl = findDropDown(actual);
+            var liEls = findMatches(actual);
+
+            var result = {
+              pass: util.equals(typeaheadEl.length, 1, customEqualityTesters) &&
+                            util.equals(typeaheadEl.hasClass('ng-hide'), false, customEqualityTesters) &&
+                            util.equals(liEls.length, noOfMatches + 1, customEqualityTesters) &&
+                            (activeIdx === -1 ? !$(liEls).hasClass('active') : $(liEls[activeIdx]).hasClass('active'))
+            };
+
+            if (result.pass) {
+              result.message = 'Expected "' + typeaheadEl + '" not to be opened.';
+            } else {
+              result.message = 'Expected "' + typeaheadEl + '" to be opened.';
             }
 
             return result;
@@ -1020,12 +1045,12 @@ describe('typeahead tests', function() {
   });
 
   describe('event listeners', function() {
-    afterEach(function() {
+    afterEach(function () {
       angular.element($window).off('resize');
       $document.find('body').off('scroll');
     });
 
-    it('should register event listeners when attached to body', function() {
+    it('should register event listeners when attached to body', function () {
       spyOn(window, 'addEventListener');
       spyOn(document.body, 'addEventListener');
 
@@ -1035,7 +1060,7 @@ describe('typeahead tests', function() {
       expect(document.body.addEventListener).toHaveBeenCalledWith('scroll', jasmine.any(Function), false);
     });
 
-    it('should remove event listeners when attached to body', function() {
+    it('should remove event listeners when attached to body', function () {
       spyOn(window, 'removeEventListener');
       spyOn(document.body, 'removeEventListener');
 
@@ -1044,6 +1069,21 @@ describe('typeahead tests', function() {
 
       expect(window.removeEventListener).toHaveBeenCalledWith('resize', jasmine.any(Function), false);
       expect(document.body.removeEventListener).toHaveBeenCalledWith('scroll', jasmine.any(Function), false);
+    });
+  });
+
+  describe('dm extends', function() {
+    it('should show create company item', function() {
+
+      var element = prepareInputEl('<div><input ng-model="result" uib-typeahead="item for item in source | filter:$viewValue" typeahead-show-create="true" typeahead-popup-template-url="template/typeahead/typeahead_popup_company.html"></div>');
+      changeInputValueTo(element, 'b');
+      expect(element).toBeOpenWithActiveAndCreate(2, 0);
+
+      triggerKeyDown(element, 40);
+      expect(element).toBeOpenWithActiveAndCreate(2, 1);
+
+      triggerKeyDown(element, 13);
+      expect(element).toBeClosed();
     });
   });
 });
