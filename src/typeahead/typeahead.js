@@ -56,6 +56,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         //a callback executed when a match is selected
         var onSelectCallback = $parse(attrs.typeaheadOnSelect);
 
+        var createCompanyCallback = $parse(attrs.typeaheadOnCreateCompanyCallback);
+
         //should it select highlighted popup value when losing focus?
         var isSelectOnBlur = angular.isDefined(attrs.typeaheadSelectOnBlur) ? originalScope.$eval(attrs.typeaheadSelectOnBlur) : false;
 
@@ -72,6 +74,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
         //If input matches an item of the list exactly, select it automatically
         var selectOnExact = attrs.typeaheadSelectOnExact ? originalScope.$eval(attrs.typeaheadSelectOnExact) : false;
+
+        // display + buttons at end of list?
+        var showCreate = originalScope.$eval(attrs.typeaheadShowCreate) || false;
 
         //INTERNAL VARIABLES
 
@@ -122,8 +127,14 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           select: 'select(activeIdx)',
           'move-in-progress': 'moveInProgress',
           query: 'query',
-          position: 'position'
+          position: 'position',
+
+          //added for dm
+          'view-value': 'modelCtrl.$viewValue',
+          'show-create': showCreate,
+          'show-dropdown-menu': 'showDropdownMenu'
         });
+
         //custom item template
         if (angular.isDefined(attrs.typeaheadTemplateUrl)) {
           popUpEl.attr('template-url', attrs.typeaheadTemplateUrl);
@@ -166,6 +177,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           isLoadingSetter(originalScope, true);
           isNoResultsSetter(originalScope, false);
           $q.when(parserResult.source(originalScope, locals)).then(function(matches) {
+
+            scope.showDropdownMenu = true;
+
             //it might happen that several async queries were in progress if a user were typing fast
             //but we are interested only in responses that correspond to the current view value
             var onCurrentRequest = (inputValue === modelCtrl.$viewValue);
@@ -336,9 +350,45 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           var locals = {};
           var model, item;
 
+          scope.showDropdownMenu = false;
+
           selected = true;
-          locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
-          model = parserResult.modelMapper(originalScope, locals);
+          if(activeIdx === 'createCompany') {
+            createCompanyCallback(originalScope, {
+              $viewValue: modelCtrl.$viewValue
+            }).then(function(newCompany) {
+              //model = newCompany;
+
+              locals[parserResult.itemName] = item = newCompany;
+              model = parserResult.modelMapper(originalScope, locals);
+
+              //begin----
+              $setModelValue(originalScope, model);
+              modelCtrl.$setValidity('editable', true);
+              modelCtrl.$setValidity('parse', true);
+
+              onSelectCallback(originalScope, {
+                $item: item,
+                $model: model,
+                $label: parserResult.viewMapper(originalScope, locals)
+              });
+
+              resetMatches();
+
+              //return focus to the input element if a match was selected via a mouse click event
+              // use timeout to avoid $rootScope:inprog error
+              if (scope.$eval(attrs.typeaheadFocusOnSelect) !== false) {
+                $timeout(function() { element[0].focus(); }, 0, false);
+              }
+              //end----
+
+            });
+          } else {
+            locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
+            model = parserResult.modelMapper(originalScope, locals);
+          }
+
+          //begin----
           $setModelValue(originalScope, model);
           modelCtrl.$setValidity('editable', true);
           modelCtrl.$setValidity('parse', true);
@@ -356,6 +406,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           if (scope.$eval(attrs.typeaheadFocusOnSelect) !== false) {
             $timeout(function() { element[0].focus(); }, 0, false);
           }
+          //end----
         };
 
         //bind keyboard events: arrows up(38) / down(40), enter(13) and tab(9), esc(27)
@@ -401,6 +452,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           }
           hasFocus = false;
           selected = false;
+          scope.showDropdownMenu = false;
         });
 
         // Keep reference to click handler to unbind it.
@@ -448,7 +500,10 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         active: '=',
         position: '&',
         moveInProgress: '=',
-        select: '&'
+        select: '&',
+        viewValue: '=',
+        showCreate: '=',
+        showDropdownMenu: '='
       },
       replace: true,
       templateUrl: function(element, attrs) {
@@ -458,7 +513,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         scope.templateUrl = attrs.templateUrl;
 
         scope.isOpen = function() {
-          return scope.matches.length > 0;
+          return (scope.matches.length > 0 || scope.showDropdownMenu) && scope.viewValue && scope.viewValue.length > 0;
         };
 
         scope.isActive = function(matchIdx) {
@@ -620,6 +675,8 @@ angular.module('ui.bootstrap.typeahead')
           'aria-expanded': false,
           'aria-owns': popupId
         });
+
+        scope.modelCtrl = modelCtrl;
 
         //pop-up element used to display matches
         var popUpEl = angular.element('<div typeahead-popup></div>');
