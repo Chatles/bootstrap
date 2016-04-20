@@ -180,10 +180,19 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
             scope.showDropdownMenu = true;
 
+            var i, match;
+            for(i in matches) {
+              match = matches[i];
+              if (match.name === inputValue) {
+                scope.haveFullMatchedCompany = true;
+              }
+            }
+
             //it might happen that several async queries were in progress if a user were typing fast
             //but we are interested only in responses that correspond to the current view value
             var onCurrentRequest = (inputValue === modelCtrl.$viewValue);
             if (onCurrentRequest && hasFocus) {
+              recalculatePosition();
               if (matches && matches.length > 0) {
                 scope.activeIdx = focusFirst ? 0 : -1;
                 isNoResultsSetter(originalScope, false);
@@ -203,7 +212,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
                 //position pop-up with matches - we need to re-calculate its position each time we are opening a window
                 //with matches as a pop-up might be absolute-positioned and position of an input might have changed on a page
                 //due to other elements being rendered
-                recalculatePosition();
+                //recalculatePosition();
 
                 element.attr('aria-expanded', true);
 
@@ -350,10 +359,11 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           var locals = {};
           var model, item;
 
-          scope.showDropdownMenu = false;
-
           selected = true;
           if(activeIdx === 'createCompany') {
+
+            scope.showDropdownMenu = false;
+
             createCompanyCallback(originalScope, {
               $viewValue: modelCtrl.$viewValue
             }).then(function(newCompany) {
@@ -381,7 +391,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
                 $timeout(function() { element[0].focus(); }, 0, false);
               }
               //end----
-
+            }, function(){
+              modelCtrl.$setValidity('parse', false);
             });
           } else {
             locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
@@ -452,7 +463,6 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           }
           hasFocus = false;
           selected = false;
-          scope.showDropdownMenu = false;
         });
 
         // Keep reference to click handler to unbind it.
@@ -503,7 +513,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         select: '&',
         viewValue: '=',
         showCreate: '=',
-        showDropdownMenu: '='
+        showDropdownMenu: '=',
+        haveFullMatchedCompany: '='
       },
       replace: true,
       templateUrl: function(element, attrs) {
