@@ -65,7 +65,7 @@ angular.module('ui.bootstrap.dropdown', ['ui.bootstrap.position'])
   };
 }])
 
-.controller('DropdownController', ['$scope', '$attrs', '$parse', 'dropdownConfig', 'dropdownService', '$animate', '$position', '$document', '$compile', '$templateRequest', function($scope, $attrs, $parse, dropdownConfig, dropdownService, $animate, $position, $document, $compile, $templateRequest) {
+.controller('DropdownController', ['$scope', '$attrs', '$parse', 'dropdownConfig', 'dropdownService', '$animate', '$position', '$document', '$compile', '$templateRequest', '$timeout', function($scope, $attrs, $parse, dropdownConfig, dropdownService, $animate, $position, $document, $compile, $templateRequest, $timeout) {
   var self = this,
     scope = $scope.$new(), // create a child scope so we are not polluting original one
     templateScope,
@@ -208,6 +208,17 @@ angular.module('ui.bootstrap.dropdown', ['ui.bootstrap.position'])
 
       scope.focusToggleElement();
       dropdownService.open(scope);
+
+      $timeout(function() {
+        scope.$apply(function() {
+          scope.position = $position.offset(self.$element);
+          scope.position.top = scope.position.top + self.$element.prop('offsetHeight');
+          if($position.offset(self.$element).top + self.dropdownMenu.prop('offsetHeight') > angular.element('body').innerHeight()) {
+            scope.position.top = scope.position.top - self.$element.prop('offsetHeight') - self.dropdownMenu.prop('offsetHeight');
+          }
+        });
+      }, 0, false);
+
     } else {
       if (self.dropdownMenuTemplateUrl) {
         if (templateScope) {
@@ -264,6 +275,12 @@ angular.module('ui.bootstrap.dropdown', ['ui.bootstrap.position'])
       if (!dropdownCtrl.dropdownMenu) {
         dropdownCtrl.dropdownMenu = element;
       }
+
+      scope.$watch(function() {
+        return dropdownCtrl.isOpen
+      }, function() {
+
+      })
     }
   };
 })
