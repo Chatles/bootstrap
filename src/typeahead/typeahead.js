@@ -182,7 +182,11 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
             for(var j = 0; j < matches.length; j++) {
               var match = matches[j];
-              if (match.name === inputValue) {
+              if(match == null) {
+                continue;
+              }
+              var name = match.name ? match.name : null;
+              if (name === inputValue) {
                 scope.haveFullMatchedCompany = true;
               }
             }
