@@ -750,7 +750,7 @@ function(scope, element, attrs, $compile, $parse, $document, $rootScope, $positi
           var datepickerPopupWrapOffset = $position.offset(datepickerPopupWrap);
           var bodyWidth = angular.element('body').prop('offsetWidth');
           if($position.offset(element).top + datepickerPopupWrap.prop('offsetHeight') > angular.element('body').innerHeight()) {
-            scope.position.top = scope.position.top - element.prop('offsetHeight') - datepickerPopupWrap.prop('offsetHeight')
+            scope.position.top = scope.position.top - element.prop('offsetHeight') - datepickerPopupWrap.prop('offsetHeight');
           }
           if(datepickerPopupWrapOffset.left + datepickerPopupWrapOffset.width > bodyWidth) {
             scope.position.left = scope.position.left - (datepickerPopupWrapOffset.left + datepickerPopupWrapOffset.width - bodyWidth);
