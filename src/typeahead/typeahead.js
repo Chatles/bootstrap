@@ -132,8 +132,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
           //added for dm
           'view-value': 'modelCtrl.$viewValue',
-          'show-create': showCreate
-          //'show-dropdown-menu': 'showDropdownMenu'
+          'show-create': 'showCreate'
         });
 
         //custom item template
@@ -179,7 +178,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           isNoResultsSetter(originalScope, false);
           $q.when(parserResult.source(originalScope, locals)).then(function(matches) {
 
-            scope.showCreate = true;
+            scope.showCreate = showCreate;
 
             if(matches) {
               for(var j = 0; j < matches.length; j++) {
@@ -478,6 +477,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
         // Keep reference to click handler to unbind it.
         var dismissClickHandler = function(evt) {
+
+          scope.showCreate = false;
+
           // Issue #3973
           // Firefox treats right click as a click on document
           if (element[0] !== evt.target && evt.which !== 3 && scope.matches.length !== 0) {

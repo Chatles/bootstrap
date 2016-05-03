@@ -19,6 +19,7 @@
     - [Found a bug?](#found-a-bug)
 - [Contributing to the project](#contributing-to-the-project)
 - [Development, meeting minutes, roadmap and more.](#development-meeting-minutes-roadmap-and-more)
+- [DM Extension](#DM-Extension)
 
 
 # Demo
@@ -120,3 +121,5 @@ We are always looking for the quality contributions! Please check the [CONTRIBUT
 # Development, meeting minutes, roadmap and more.
 
 Head over to the [Wiki](https://github.com/angular-ui/bootstrap/wiki) for notes on development for UI Bootstrap, meeting minutes from the UI Bootstrap team, roadmap plans, project philosophy and more.
+
+# DM Extension
