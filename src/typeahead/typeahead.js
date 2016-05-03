@@ -36,6 +36,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
       link: function(originalScope, element, attrs, ctrls) {
         var modelCtrl = ctrls[0];
         var ngModelOptions = ctrls[1];
+        originalScope.modelCtrl = modelCtrl;
         //SUPPORTED ATTRIBUTES (OPTIONS)
 
         //minimal no of characters that needs to be entered before typeahead kicks-in
@@ -131,8 +132,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
           //added for dm
           'view-value': 'modelCtrl.$viewValue',
-          'show-create': showCreate,
-          'show-dropdown-menu': 'showDropdownMenu'
+          'show-create': showCreate
+          //'show-dropdown-menu': 'showDropdownMenu'
         });
 
         //custom item template
@@ -178,16 +179,18 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           isNoResultsSetter(originalScope, false);
           $q.when(parserResult.source(originalScope, locals)).then(function(matches) {
 
-            scope.showDropdownMenu = true;
+            scope.showCreate = true;
 
-            for(var j = 0; j < matches.length; j++) {
-              var match = matches[j];
-              if(match == null) {
-                continue;
-              }
-              var name = match.name ? match.name : null;
-              if (name === inputValue) {
-                scope.haveFullMatchedCompany = true;
+            if(matches) {
+              for(var j = 0; j < matches.length; j++) {
+                var match = matches[j];
+                if(match == null) {
+                  continue;
+                }
+                var name = match.name ? match.name : null;
+                if (name === inputValue) {
+                  scope.haveFullMatchedCompany = true;
+                }
               }
             }
 
@@ -358,6 +361,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         });
 
         scope.select = function(activeIdx) {
+
+          scope.showCreate = false;
+
           //called from within the $digest() cycle
           var locals = {};
           var model, item;
@@ -365,7 +371,6 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
           selected = true;
           if(activeIdx === 'createCompany') {
 
-            scope.showDropdownMenu = false;
 
             createCompanyCallback(originalScope, {
               $viewValue: modelCtrl.$viewValue
@@ -425,6 +430,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
 
         //bind keyboard events: arrows up(38) / down(40), enter(13) and tab(9), esc(27)
         element.bind('keydown', function(evt) {
+
+          scope.showCreate = false;
+
           //typeahead is open and an "interesting" key was pressed
           if (scope.matches.length === 0 || HOT_KEYS.indexOf(evt.which) === -1) {
             return;
@@ -516,7 +524,6 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         select: '&',
         viewValue: '=',
         showCreate: '=',
-        showDropdownMenu: '=',
         haveFullMatchedCompany: '='
       },
       replace: true,
@@ -527,7 +534,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position'])
         scope.templateUrl = attrs.templateUrl;
 
         scope.isOpen = function() {
-          return (scope.matches.length > 0 || scope.showDropdownMenu) && scope.viewValue && scope.viewValue.length > 0;
+          return (scope.matches.length > 0 || scope.showCreate);
         };
 
         scope.isActive = function(matchIdx) {

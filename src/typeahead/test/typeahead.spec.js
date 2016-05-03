@@ -102,7 +102,7 @@ describe('typeahead tests', function() {
               pass: util.equals(typeaheadEl.length, 1, customEqualityTesters) &&
                     util.equals(typeaheadEl.hasClass('ng-hide'), false, customEqualityTesters) &&
                     util.equals(liEls.length, noOfMatches, customEqualityTesters) &&
-                    activeIdx === -1 ? !$(liEls).hasClass('active') : $(liEls[activeIdx]).hasClass('active')
+                    (activeIdx === -1 ? !$(liEls).hasClass('active') : $(liEls[activeIdx]).hasClass('active'))
             };
 
             if (result.pass) {
