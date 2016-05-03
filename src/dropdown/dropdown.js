@@ -209,10 +209,10 @@ angular.module('ui.bootstrap.dropdown', ['ui.bootstrap.position'])
 
       $timeout(function() {
         scope.$apply(function() {
-          scope.position = $position.offset(self.$element);
-          scope.position.top = scope.position.top + self.$element.prop('offsetHeight');
-          if($position.offset(self.$element).top + self.dropdownMenu.prop('offsetHeight') > angular.element('body').innerHeight()) {
-            scope.position.top = scope.position.top - self.$element.prop('offsetHeight') - self.dropdownMenu.prop('offsetHeight');
+          scope.position = $position.offset($element);
+          scope.position.top = scope.position.top + $element.prop('offsetHeight');
+          if($position.offset($element).top + self.dropdownMenu.prop('offsetHeight') > angular.element('body').innerHeight()) {
+            scope.position.top = scope.position.top - $element.prop('offsetHeight') - self.dropdownMenu.prop('offsetHeight');
           }
         });
       }, 0, false);
