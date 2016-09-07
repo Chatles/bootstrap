@@ -55,6 +55,9 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.debounce', 'ui.bootstrap
     //binding to a variable that indicates if matches are being retrieved asynchronously
     var isLoadingSetter = $parse(attrs.typeaheadLoading).assign || angular.noop;
 
+    var hasExternal = !!originalScope.$eval(attrs.typeaheadExternal);
+    var externalCallback = $parse(attrs.typeaheadExternalCallback);
+
     //a function to determine if an event should cause selection
     var isSelectEvent = attrs.typeaheadShouldSelect ? $parse(attrs.typeaheadShouldSelect) : function(scope, vals) {
       var evt = vals.$event;
@@ -226,10 +229,19 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.debounce', 'ui.bootstrap
         //but we are interested only in responses that correspond to the current view value
         var onCurrentRequest = inputValue === modelCtrl.$viewValue;
         if (onCurrentRequest && hasFocus) {
-          if (matches && matches.length > 0) {
+
+          if (matches && matches.length > 0 || hasExternal) {
             scope.activeIdx = focusFirst ? 0 : -1;
             isNoResultsSetter(originalScope, false);
             scope.matches.length = 0;
+
+            if(hasExternal) {
+              matches.push({
+                name: 'Create company ' + inputValue,
+                isCustomCreateCompany: true,
+                companyName: inputValue
+              });
+            }
 
             //transform labels
             for (var i = 0; i < matches.length; i++) {
@@ -351,26 +363,57 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.debounce', 'ui.bootstrap
       var model, item;
 
       selected = true;
-      locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
-      model = parserResult.modelMapper(originalScope, locals);
-      $setModelValue(originalScope, model);
-      modelCtrl.$setValidity('editable', true);
-      modelCtrl.$setValidity('parse', true);
 
-      onSelectCallback(originalScope, {
-        $item: item,
-        $model: model,
-        $label: parserResult.viewMapper(originalScope, locals),
-        $event: evt
-      });
+      if(scope.matches[activeIdx].model.isCustomCreateCompany) {
+        $q.when(externalCallback(originalScope, {
+          $viewValue: scope.matches[activeIdx].model.companyName
+        })).then(function(newCompany) {
+            //scope.matches[activeIdx].model = newCompany;
+            //locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
+            //model = parserResult.modelMapper(originalScope, locals);
+            model = newCompany;
+            $setModelValue(originalScope, model);
+            modelCtrl.$setValidity('editable', true);
+            modelCtrl.$setValidity('parse', true);
 
-      resetMatches();
+            onSelectCallback(originalScope, {
+              $item: item,
+              $model: model,
+              $label: parserResult.viewMapper(originalScope, locals),
+              $event: evt
+            });
 
-      //return focus to the input element if a match was selected via a mouse click event
-      // use timeout to avoid $rootScope:inprog error
-      if (scope.$eval(attrs.typeaheadFocusOnSelect) !== false) {
-        $timeout(function() { element[0].focus(); }, 0, false);
+            resetMatches();
+
+            //return focus to the input element if a match was selected via a mouse click event
+            // use timeout to avoid $rootScope:inprog error
+            if (scope.$eval(attrs.typeaheadFocusOnSelect) !== false) {
+              $timeout(function() { element[0].focus(); }, 0, false);
+            }
+          });
+      } else {
+        locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
+        model = parserResult.modelMapper(originalScope, locals);
+        $setModelValue(originalScope, model);
+        modelCtrl.$setValidity('editable', true);
+        modelCtrl.$setValidity('parse', true);
+
+        onSelectCallback(originalScope, {
+          $item: item,
+          $model: model,
+          $label: parserResult.viewMapper(originalScope, locals),
+          $event: evt
+        });
+
+        resetMatches();
+
+        //return focus to the input element if a match was selected via a mouse click event
+        // use timeout to avoid $rootScope:inprog error
+        if (scope.$eval(attrs.typeaheadFocusOnSelect) !== false) {
+          $timeout(function() { element[0].focus(); }, 0, false);
+        }
       }
+
     };
 
     //bind keyboard events: arrows up(38) / down(40), enter(13) and tab(9), esc(27)
