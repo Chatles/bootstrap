@@ -1,0 +1,51 @@
+Scope(3): {
+    moveInProgress: false
+    query: "a"
+    matches: [{"id":"typeahead-3-6129-option-0","label":"Alabama","model":"Alabama"},{"id":"typeahead-3-6129-option-1","label":"Alaska","model":"Alaska"},{"id":"typeahead-3-6129-option-2","label":"Arizona","model":"Arizona"}]
+    activeIdx: "createCompany"
+    popUp: false
+    assignIsOpen: undefined
+    select: undefined
+    debounceUpdate: null
+    position: {"width":157,"height":25,"top":25,"left":0}
+      Scope(4): {
+      matches: [{"id":"typeahead-3-6129-option-0","label":"Alabama","model":"Alabama"},{"id":"typeahead-3-6129-option-1","label":"Alaska","model":"Alaska"},{"id":"typeahead-3-6129-option-2","label":"Arizona","model":"Arizona"}]
+      query: "a"
+      active: "createCompany"
+      position: undefined
+      moveInProgress: false
+      select: undefined
+      assignIsOpen: undefined
+      debounce: undefined
+      angular: {"version":{"full":"1.5.8","major":1,"minor":5,"dot":8,"codeName":"arbitrary-fallbacks"},"callbacks":{},"mock":{"animate":{"_invokeQueue":[],"_configBlocks":[["$injector","invoke",{"0":["$provide",null]}]],"_runBlocks":[],"requires":["ng"],"name":"ngAnimateMock"},"$TimeoutDecorator":["$delegate","$browser",null],"$RAFDecorator":["$delegate",null],"$ControllerDecorator":["$delegate",null],"$ComponentControllerProvider":["$compileProvider",null],"e2e":{"$httpBackendDecorator":["$rootScope","$timeout","$delegate","$browser",null]},"$RootScopeDecorator":["$delegate",null]}}
+      templateUrl: undefined
+      isOpen: undefined
+      isActive: undefined
+      selectActive: undefined
+      selectMatch: undefined
+          Scope(10): {
+        match: {"id":"typeahead-3-6129-option-0","label":"Alabama","model":"Alabama"}
+              Scope(13): {
+          index: 0
+          match: {"id":"typeahead-3-6129-option-0","label":"Alabama","model":"Alabama"}
+          query: "a"
+        }
+      }
+          Scope(14): {
+        match: {"id":"typeahead-3-6129-option-1","label":"Alaska","model":"Alaska"}
+              Scope(16): {
+          index: 1
+          match: {"id":"typeahead-3-6129-option-1","label":"Alaska","model":"Alaska"}
+          query: "a"
+        }
+      }
+          Scope(17): {
+        match: {"id":"typeahead-3-6129-option-2","label":"Arizona","model":"Arizona"}
+              Scope(19): {
+          index: 2
+          match: {"id":"typeahead-3-6129-option-2","label":"Arizona","model":"Arizona"}
+          query: "a"
+        }
+      }
+    }
+  }create company
