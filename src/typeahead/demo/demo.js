@@ -1,7 +1,6 @@
-angular.module('ui.bootstrap.typeahead').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTypeaheadCss && angular.element(document).find('head').prepend('<style type="text/css">[uib-typeahead-popup].dropdown-menu{display:block;}</style>'); angular.$$uibTypeaheadCss = true; });
+angular.module('ui.bootstrap.typeahead').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTypeaheadCss && angular.element(document).find('head').prepend('<style type="text/css">[uib-typeahead-popup].dropdown-menu{display:block;}</style>'); angular.$$uibTypeaheadCss = true;});
 
-
-angular.module('demo', ['ngAnimate', 'ngSanitize', 'uib/template/typeahead/typeahead-popup.html',  'uib/template/typeahead/typeahead-match.html', 'ui.bootstrap.typeahead']);
+angular.module('demo', ['ngAnimate', 'ngSanitize', 'uib/template/typeahead/typeahead-popup.html', 'uib/template/typeahead/typeahead-match.html', 'ui.bootstrap.typeahead']);
 angular.module('demo').controller('DemoCtrl', function($scope, $timeout, $q) {
 
 
@@ -16,9 +15,9 @@ angular.module('demo').controller('DemoCtrl', function($scope, $timeout, $q) {
       console.log('name=', name);
       defer.resolve({
         name: name
-      })
+      });
     }, 2000);
-    return defer.promise
+    return defer.promise;
   };
 
 });

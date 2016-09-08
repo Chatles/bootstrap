@@ -27,6 +27,7 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
+      'src/typeahead/demo/*',
       'src/**/index.js',
       'src/**/index-nocss.js',
       'src/**/docs/*'

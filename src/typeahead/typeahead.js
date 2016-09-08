@@ -55,7 +55,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.debounce', 'ui.bootstrap
     //binding to a variable that indicates if matches are being retrieved asynchronously
     var isLoadingSetter = $parse(attrs.typeaheadLoading).assign || angular.noop;
 
-    var hasExternal = originalScope.$eval(attrs.typeaheadExternal) !== false;
+    var hasExternal = !!originalScope.$eval(attrs.typeaheadExternal);
     var externalCallback = $parse(attrs.typeaheadExternalCallback);
 
     //a function to determine if an event should cause selection
@@ -229,7 +229,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.debounce', 'ui.bootstrap
         //but we are interested only in responses that correspond to the current view value
         var onCurrentRequest = inputValue === modelCtrl.$viewValue;
         if (onCurrentRequest && hasFocus) {
-          if (matches) {
+
+          if (matches && matches.length > 0 || hasExternal) {
             scope.activeIdx = focusFirst ? 0 : -1;
             isNoResultsSetter(originalScope, false);
             scope.matches.length = 0;
@@ -389,7 +390,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.debounce', 'ui.bootstrap
             if (scope.$eval(attrs.typeaheadFocusOnSelect) !== false) {
               $timeout(function() { element[0].focus(); }, 0, false);
             }
-          })
+          });
       } else {
         locals[parserResult.itemName] = item = scope.matches[activeIdx].model;
         model = parserResult.modelMapper(originalScope, locals);
